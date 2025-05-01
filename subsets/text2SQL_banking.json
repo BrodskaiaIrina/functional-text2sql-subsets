@@ -1,0 +1,180 @@
+{
+    "queries": [
+        {
+            "question": "Какие клиенты имеют общую сумму страхового покрытия более 1 миллиона рублей?",
+            "sql_query": "SELECT c.FirstName, c.LastName, SUM(p.CoverageAmount) AS TotalCoverage FROM Customers c JOIN InsurancePolicies p ON c.CustomerID = p.CustomerID WHERE p.Status = 'Активен' GROUP BY c.FirstName, c.LastName HAVING SUM(p.CoverageAmount) > 1000000;"
+        },
+        {
+            "question": "Какие клиенты имеют более 1 ожидающего страхового возмещения?",
+            "sql_query": "SELECT c.FirstName, c.LastName, COUNT(pc.ClaimID) AS TotalClaims FROM Customers c JOIN InsurancePolicies p ON c.CustomerID = p.CustomerID JOIN PolicyClaims pc ON p.PolicyID = pc.PolicyID WHERE pc.Status = 'Ожидание' GROUP BY c.FirstName, c.LastName HAVING COUNT(pc.ClaimID) > 1;"
+        },
+        {
+            "question": "Какие клиенты имеют более 1 ипотечного кредита?",
+            "sql_query": "SELECT c.FirstName, c.LastName, COUNT(l.LoanID) AS TotalLoans FROM Customers c JOIN Loans l ON c.CustomerID = l.CustomerID WHERE l.LoanType = 'Ипотека' GROUP BY c.FirstName, c.LastName HAVING COUNT(l.LoanID) > 1;"
+        },
+        {
+            "question": "Какие филиалы банка имеют максимальную зарплату сотрудников более 90000 рублей и сколько там сотрудников?",
+            "sql_query": "SELECT b.BranchName, COUNT(e.EmployeeID) AS TotalEmployees, MAX(e.Salary) AS MaxSalary FROM Branches b JOIN Employees e ON b.BranchID = e.BranchID GROUP BY b.BranchName HAVING MAX(e.Salary) > 90000;"
+        },
+        {
+            "question": "Какие 5 клиентов имеют наибольшую сумму страхового покрытия по активным полисам с ожидающими выплатами?",
+            "sql_query": "SELECT c.FirstName, c.LastName, SUM(p.CoverageAmount) AS TotalCoverage FROM Customers c JOIN InsurancePolicies p ON c.CustomerID = p.CustomerID JOIN PolicyClaims pc ON p.PolicyID = pc.PolicyID WHERE p.Status = 'Активен' AND pc.Status = 'Ожидание' GROUP BY c.FirstName, c.LastName ORDER BY TotalCoverage DESC LIMIT 5;"
+        },
+        {
+            "question": "Какие валюты использовались в транзакциях за последний год и каковы их количество и общие суммы?",
+            "sql_query": "SELECT t.Currency, COUNT(t.TransactionID) AS TotalTransactions, SUM(t.Amount) AS TotalAmount FROM Transactions t WHERE t.TransactionDate >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR) GROUP BY t.Currency;"
+        },
+        {
+            "question": "Какие 10 клиентов с активными кредитами имеют наибольший объем транзакций по счетам?",
+            "sql_query": "SELECT c.FirstName, c.LastName, (SELECT COUNT(*) FROM Accounts a WHERE a.CustomerID = c.CustomerID AND a.Status = 'Active') AS ActiveAccounts, (SELECT SUM(t.Amount) FROM Transactions t WHERE t.AccountID IN (SELECT a.AccountID FROM Accounts a WHERE a.CustomerID = c.CustomerID) AND t.Status = 'Завершено') AS TotalTransactionAmount FROM Customers c WHERE c.CustomerID IN (SELECT DISTINCT CustomerID FROM Loans WHERE Status = 'Активно') ORDER BY TotalTransactionAmount DESC LIMIT 10;"
+        },
+        {
+            "question": "Какие филиалы банка имеют активные банкоматы и среднюю зарплату сотрудников более 50000 рублей?",
+            "sql_query": "SELECT b.BranchName, (SELECT COUNT(*) FROM ATMs atm WHERE atm.BranchID = b.BranchID AND atm.Status = 'Active') AS ActiveATMs, (SELECT AVG(e.Salary) FROM Employees e WHERE e.BranchID = b.BranchID) AS AverageEmployeeSalary FROM Branches b WHERE b.BranchID IN (SELECT DISTINCT BranchID FROM Employees WHERE Salary > 50000) ORDER BY ActiveATMs DESC, AverageEmployeeSalary DESC;"
+        },
+        {
+            "question": "Какие 10 клиентов с активными счетами имеют наибольшую сумму выплат по кредитам? Покажите имя и фамилию клиента, количество активных кредитов и общую сумму выплат.",
+            "sql_query": "SELECT c.FirstName, c.LastName, (SELECT COUNT(*) FROM Loans l WHERE l.CustomerID = c.CustomerID AND l.Status = 'Активно') AS ActiveLoans, (SELECT SUM(lp.Amount) FROM LoanPayments lp WHERE lp.LoanID IN (SELECT l.LoanID FROM Loans l WHERE l.CustomerID = c.CustomerID) AND lp.Status = 'Завершено') AS TotalLoanPayments FROM Customers c WHERE c.CustomerID IN (SELECT DISTINCT CustomerID FROM Accounts WHERE Status = 'Active') ORDER BY TotalLoanPayments DESC LIMIT 10;"
+        },
+        {
+            "question": "Какие 5 филиалов банка с активными банкоматами имеют наибольший объем транзакций и сколько банкоиров в этих филиалах?",
+            "sql_query": "SELECT b.BranchName, (SELECT COUNT(*) FROM Employees e WHERE e.BranchID = b.BranchID AND e.Position = 'Банкир') AS TotalBankers, (SELECT SUM(t.Amount) FROM Transactions t WHERE t.AccountID IN (SELECT a.AccountID FROM Accounts a WHERE a.CustomerID IN (SELECT e.EmployeeID FROM Employees e WHERE e.BranchID = b.BranchID)) AND t.Status = 'Завершено') AS TotalBranchTransactions FROM Branches b WHERE b.BranchID IN (SELECT DISTINCT BranchID FROM ATMs WHERE Status = 'Active') ORDER BY TotalBranchTransactions DESC LIMIT 5;"
+        },
+        {
+            "question": "Какие 5 кредитных специалистов имеют наибольшую среднюю сумму платежей по управляемым кредитам и сколько этих кредитов?",
+            "sql_query": "SELECT e.FirstName, e.LastName, (SELECT COUNT(*) FROM Loans l WHERE l.CustomerID = e.EmployeeID AND l.Status = 'Активно') AS ManagedLoans, (SELECT AVG(lp.Amount) FROM LoanPayments lp WHERE lp.LoanID IN (SELECT l.LoanID FROM Loans l WHERE l.CustomerID = e.EmployeeID) AND lp.Status = 'Завершено') AS AvgLoanPayment FROM Employees e WHERE e.Position = 'Кредитный специалист' ORDER BY AvgLoanPayment DESC LIMIT 5;"
+        },
+        {
+            "question": "Какие 10 активных рублевых счетов имеют наибольший объем транзакций? Покажите также количество завершенных транзакций по этим счетам.",
+            "sql_query": "SELECT a.AccountNumber, (SELECT COUNT(*) FROM Transactions t WHERE t.AccountID = a.AccountID AND t.Status = 'Завершено') AS CompletedTransactions, (SELECT SUM(t.Amount) FROM Transactions t WHERE t.AccountID = a.AccountID AND t.Status = 'Завершено') AS TotalTransactionAmount FROM Accounts a WHERE a.Status = 'Active' AND a.Currency = 'RUB' ORDER BY TotalTransactionAmount DESC LIMIT 10;"
+        },
+        {
+            "question": "Какие 5 клиентов с активными кредитами имеют наибольший объем операций по вкладам? Мне нужно получить также количество активных вкладов.",
+            "sql_query": "SELECT c.FirstName, c.LastName, (SELECT COUNT(*) FROM Deposits d WHERE d.CustomerID = c.CustomerID AND d.Status = 'Активен') AS ActiveDeposits, (SELECT SUM(dt.Amount) FROM DepositTransactions dt WHERE dt.DepositID IN (SELECT d.DepositID FROM Deposits d WHERE d.CustomerID = c.CustomerID) AND dt.Status = 'Завершено') AS TotalDepositTransactions FROM Customers c WHERE c.CustomerID IN (SELECT DISTINCT CustomerID FROM Loans WHERE Status = 'Активно') ORDER BY TotalDepositTransactions DESC LIMIT 5;"
+        },
+        {
+            "question": "Какие 3 филиала банка с сотрудниками с зарплатой более 60000 рублей имеют наибольшую сумму вкладов? Покажите название отделения, количество активных банкоматов и общую сумму вкладов в отделении.",
+            "sql_query": "SELECT b.BranchName, (SELECT COUNT(*) FROM ATMs atm WHERE atm.BranchID = b.BranchID AND atm.Status = 'Active') AS ActiveATMs, (SELECT SUM(d.Amount) FROM Deposits d WHERE d.CustomerID IN (SELECT c.CustomerID FROM Customers c WHERE c.CustomerID IN (SELECT DISTINCT CustomerID FROM Accounts WHERE BranchID = b.BranchID)) AND d.Status = 'Активен') AS TotalBranchDeposits FROM Branches b WHERE b.BranchID IN (SELECT DISTINCT BranchID FROM Employees WHERE Salary > 60000) ORDER BY TotalBranchDeposits DESC LIMIT 3;"
+        },
+        {
+            "question": "Какие 5 аналитиков имеют наибольшую среднюю стоимость управляемых услуг? Выведите имя и фамилию сотрудника, количество управляемых услуг и среднюю стоимость услуг.",
+            "sql_query": "SELECT e.FirstName, e.LastName, (SELECT COUNT(*) FROM CustomerServices cs WHERE cs.CustomerID = e.EmployeeID AND cs.Status = 'активен') AS ManagedServices, (SELECT AVG(s.Fee) FROM Services s WHERE s.ServiceID IN (SELECT cs.ServiceID FROM CustomerServices cs WHERE cs.CustomerID = e.EmployeeID) AND s.Status = 'Активен') AS AvgServiceFee FROM Employees e WHERE e.Position = 'Аналитик' ORDER BY AvgServiceFee DESC LIMIT 5;"
+        },
+        {
+            "question": "Какие 10 активных долларовых счетов имеют наибольший объем транзакций? Покажите номер счета, количество завершенных транзакций и общий объем транзакций.",
+            "sql_query": "SELECT a.AccountNumber, (SELECT COUNT(*) FROM Transactions t WHERE t.AccountID = a.AccountID AND t.Status = 'Завершено') AS CompletedTransactions, (SELECT SUM(t.Amount) FROM Transactions t WHERE t.AccountID = a.AccountID AND t.Status = 'Завершено') AS TotalTransactionAmount FROM Accounts a WHERE a.Status = 'Active' AND a.Currency = 'USD' ORDER BY TotalTransactionAmount DESC LIMIT 10;"
+        },
+        {
+            "question": "Какие 5 филиалов банка с сотрудниками с зарплатой более 60000 рублей имеют наибольшее количество активных кредитов?",
+            "sql_query": "SELECT b.BranchName, (SELECT COUNT(*) FROM Loans l WHERE l.CustomerID IN (SELECT c.CustomerID FROM Customers c WHERE c.CustomerID IN (SELECT a.CustomerID FROM Accounts a WHERE a.AccountID IN (SELECT t.AccountID FROM Transactions t WHERE t.Status = 'Завершено'))) AND l.Status = 'Активно') AS ActiveLoans, (SELECT AVG(e.Salary) FROM Employees e WHERE e.BranchID = b.BranchID) AS AvgEmployeeSalary FROM Branches b WHERE b.BranchID IN (SELECT DISTINCT BranchID FROM Employees WHERE Salary > 60000) ORDER BY ActiveLoans DESC, AvgEmployeeSalary DESC LIMIT 5;"
+        },
+        {
+            "question": "Какие 7 банкиров имеют наибольшую сумму выплаченных страховых возмещений? Выведите имя и фамилию сотрудника, количество управляемых страховых полисов и общую сумму выплаченных страховых возмещений.",
+            "sql_query": "SELECT e.FirstName, e.LastName, (SELECT COUNT(*) FROM InsurancePolicies ip WHERE ip.CustomerID = e.EmployeeID AND ip.Status = 'Активен') AS ManagedPolicies, (SELECT SUM(pc.ClaimAmount) FROM PolicyClaims pc WHERE pc.PolicyID IN (SELECT ip.PolicyID FROM InsurancePolicies ip WHERE ip.CustomerID = e.EmployeeID) AND pc.Status = 'Выплачено') AS TotalClaimAmount FROM Employees e WHERE e.Position = 'Банкир' ORDER BY TotalClaimAmount DESC LIMIT 7;"
+        },
+        {
+            "question": "Какие 6 активных рублевых счетов имеют наибольший объем транзакций и среднюю сумму транзакции? Покажите также количество завершенных транзакций по этим счетам",
+            "sql_query": "SELECT a.AccountNumber, (SELECT COUNT(*) FROM Transactions t WHERE t.AccountID = a.AccountID AND t.Status = 'Завершено') AS CompletedTransactions, (SELECT SUM(t.Amount) FROM Transactions t WHERE t.AccountID = a.AccountID AND t.Status = 'Завершено') AS TotalTransactionAmount, (SELECT AVG(t.Amount) FROM Transactions t WHERE t.AccountID = a.AccountID AND t.Status = 'Завершено') AS AvgTransactionAmount FROM Accounts a WHERE a.Status = 'Active' AND a.Currency = 'RUB' ORDER BY TotalTransactionAmount DESC LIMIT 6;"
+        },
+        {
+            "question": "Какие 10 клиентов с активными кредитами имеют наибольшее количество активных вкладов и каков общий объем операций по этим вкладам?",
+            "sql_query": "SELECT c.FirstName, c.LastName, (SELECT COUNT(*) FROM Deposits d WHERE d.CustomerID = c.CustomerID AND d.Status = 'Активен') AS ActiveDeposits, (SELECT SUM(dt.Amount) FROM DepositTransactions dt WHERE dt.DepositID IN (SELECT d.DepositID FROM Deposits d WHERE d.CustomerID = c.CustomerID) AND dt.Status = 'Завершено') AS TotalDepositTransactions FROM Customers c WHERE c.CustomerID IN (SELECT DISTINCT CustomerID FROM Loans WHERE Status = 'Активно') ORDER BY ActiveDeposits DESC LIMIT 10;"
+        },
+        {
+            "question": "Какие 8 филиалов банка с активными банкоматами имеют наибольший объем транзакций и сколько аналитиков в этих отделениях?",
+            "sql_query": "SELECT b.BranchName, (SELECT COUNT(*) FROM Employees e WHERE e.BranchID = b.BranchID AND e.Position = 'Аналитик') AS TotalAnalysts, (SELECT SUM(t.Amount) FROM Transactions t WHERE t.AccountID IN (SELECT a.AccountID FROM Accounts a WHERE a.CustomerID IN (SELECT e.EmployeeID FROM Employees e WHERE e.BranchID = b.BranchID)) AND t.Status = 'Завершено') AS TotalBranchTransactions FROM Branches b WHERE b.BranchID IN (SELECT DISTINCT BranchID FROM ATMs WHERE Status = 'Active') ORDER BY TotalBranchTransactions DESC LIMIT 8;"
+        },
+        {
+            "question": "Какие 5 кредитных специалистов имеют наибольшую общую стоимость управляемых услуг? Выведите имя и фамилию сотрудника, количество управляемых услуг и их общую стоимость.",
+            "sql_query": "SELECT e.FirstName, e.LastName, (SELECT COUNT(*) FROM CustomerServices cs WHERE cs.CustomerID = e.EmployeeID AND cs.Status = 'активен') AS ManagedServices, (SELECT SUM(s.Fee) FROM Services s WHERE s.ServiceID IN (SELECT cs.ServiceID FROM CustomerServices cs WHERE cs.CustomerID = e.EmployeeID) AND s.Status = 'Активен') AS TotalServiceFee FROM Employees e WHERE e.Position = 'Кредитный специалист' ORDER BY TotalServiceFee DESC LIMIT 5;"
+        },
+        {
+            "question": "Какие 9 активных долларовых счетов имеют наибольшую среднюю сумму транзакции? Покажите номер счета, количество завершенных транзакций, среднюю сумму транзакции и общий объем транзакций.",
+            "sql_query": "SELECT a.AccountNumber, (SELECT COUNT(*) FROM Transactions t WHERE t.AccountID = a.AccountID AND t.Status = 'Завершено') AS CompletedTransactions, (SELECT AVG(t.Amount) FROM Transactions t WHERE t.AccountID = a.AccountID AND t.Status = 'Завершено') AS AvgTransactionAmount, (SELECT SUM(t.Amount) FROM Transactions t WHERE t.AccountID = a.AccountID AND t.Status = 'Завершено') AS TotalTransactionAmount FROM Accounts a WHERE a.Status = 'Active' AND a.Currency = 'USD' ORDER BY AvgTransactionAmount DESC LIMIT 9;"
+        },
+        {
+            "question": "Какие 6 клиентов с активными счетами имеют наибольшую среднюю сумму страховых выплат и сколько у них активных страховых полисов?",
+            "sql_query": "SELECT c.FirstName, c.LastName, (SELECT COUNT(*) FROM InsurancePolicies ip WHERE ip.CustomerID = c.CustomerID AND ip.Status = 'Активен') AS ActivePolicies, (SELECT AVG(pc.ClaimAmount) FROM PolicyClaims pc WHERE pc.PolicyID IN (SELECT ip.PolicyID FROM InsurancePolicies ip WHERE ip.CustomerID = c.CustomerID) AND pc.Status = 'Выплачено') AS AvgClaimAmount FROM Customers c WHERE c.CustomerID IN (SELECT DISTINCT CustomerID FROM Accounts WHERE Status = 'Active') ORDER BY AvgClaimAmount DESC LIMIT 6;"
+        },
+        {
+            "question": "Какие 7 филиалов банка с активными банкоматами имеют наибольшее количество аналитиков и среднюю сумму транзакций?",
+            "sql_query": "SELECT b.BranchName, (SELECT COUNT(*) FROM Employees e WHERE e.BranchID = b.BranchID AND e.Position = 'Аналитик') AS TotalAnalysts, (SELECT AVG(t.Amount) FROM Transactions t WHERE t.AccountID IN (SELECT a.AccountID FROM Accounts a WHERE a.CustomerID IN (SELECT e.EmployeeID FROM Employees e WHERE e.BranchID = b.BranchID)) AND t.Status = 'Завершено') AS AvgBranchTransactionAmount FROM Branches b WHERE b.BranchID IN (SELECT DISTINCT BranchID FROM ATMs WHERE Status = 'Active') ORDER BY TotalAnalysts DESC, AvgBranchTransactionAmount DESC LIMIT 7;"
+        },
+        {
+            "question": "Какие 6 кассиров имеют наибольшую общую стоимость управляемых услуг? Выведите также количество управляемых услуг.",
+            "sql_query": "SELECT e.FirstName, e.LastName, (SELECT COUNT(*) FROM CustomerServices cs WHERE cs.CustomerID = e.EmployeeID AND cs.Status = 'активен') AS ManagedServices, (SELECT SUM(s.Fee) FROM Services s WHERE s.ServiceID IN (SELECT cs.ServiceID FROM CustomerServices cs WHERE cs.CustomerID = e.EmployeeID) AND s.Status = 'Активен') AS TotalServiceFee FROM Employees e WHERE e.Position = 'Кассир' ORDER BY TotalServiceFee DESC LIMIT 6;"
+        },
+        {
+            "question": "Какие 7 сотрудников (банкиры, кредитные специалисты и аналитики) имеют наибольший доход от услуг? Мне нужно получить имя, фамилию и должность сотрудника, количество управляемых кредитов, среднюю процентную ставку по кредитам, количество управляемых услуг и общий доход от услуг.",
+            "sql_query": "SELECT e.FirstName, e.LastName, e.Position, (SELECT COUNT(*) FROM Loans l WHERE l.CustomerID = e.EmployeeID AND l.Status = 'Активен') AS ManagedLoans, (SELECT AVG(l.InterestRate) FROM Loans l WHERE l.CustomerID = e.EmployeeID AND l.Status = 'Активен') AS AvgLoanInterestRate, (SELECT COUNT(*) FROM CustomerServices cs WHERE cs.CustomerID = e.EmployeeID AND cs.Status = 'Активен') AS ManagedServices, (SELECT SUM(s.Fee) FROM Services s WHERE s.ServiceID IN (SELECT cs.ServiceID FROM CustomerServices cs WHERE cs.CustomerID = e.EmployeeID) AND s.Status = 'Активен') AS TotalServiceRevenue FROM Employees e WHERE e.Position IN ('Банкир', 'Кредитный специалист', 'Аналитик') ORDER BY TotalServiceRevenue DESC LIMIT 7;"
+        },
+        {
+            "question": "Какие 6 клиентов с активными страховыми полисами на сумму более 500000 рублей имеют наибольшую сумму выплаченных возмещений? Покажите имя и фамилию клиента, количество активных полисов, общую сумму страхового покрытия, количество выплаченных возмещений и общую сумму выплаченных возмещений.",
+            "sql_query": "SELECT c.FirstName, c.LastName, (SELECT COUNT(*) FROM InsurancePolicies ip WHERE ip.CustomerID = c.CustomerID AND ip.Status = 'Активен') AS ActivePolicies, (SELECT SUM(ip.CoverageAmount) FROM InsurancePolicies ip WHERE ip.CustomerID = c.CustomerID AND ip.Status = 'Активен') AS TotalCoverage, (SELECT COUNT(*) FROM PolicyClaims pc WHERE pc.PolicyID IN (SELECT ip.PolicyID FROM InsurancePolicies ip WHERE ip.CustomerID = c.CustomerID) AND pc.Status = 'Завершено') AS TotalClaims, (SELECT SUM(pc.ClaimAmount) FROM PolicyClaims pc WHERE pc.PolicyID IN (SELECT ip.PolicyID FROM InsurancePolicies ip WHERE ip.CustomerID = c.CustomerID) AND pc.Status = 'Завершено') AS TotalClaimAmount FROM Customers c WHERE c.CustomerID IN (SELECT DISTINCT CustomerID FROM InsurancePolicies WHERE Status = 'Активен' AND CoverageAmount > 500000) ORDER BY TotalClaimAmount DESC LIMIT 6;"
+        },
+        {
+            "question": "Какие 5 филиалов банка с сотрудниками с зарплатой более 60000 рублей имеют наибольший объем транзакций и количество активных кредитов? Нужно получить название отделения, количество активных банкоматов, общее количество сотрудников, среднюю зарплату, общий объем транзакций и количество активных кредитов.",
+            "sql_query": "SELECT b.BranchName, (SELECT COUNT(*) FROM ATMs atm WHERE atm.BranchID = b.BranchID AND atm.Status = 'Активен') AS ActiveATMs, (SELECT COUNT(*) FROM Employees e WHERE e.BranchID = b.BranchID) AS TotalEmployees, (SELECT AVG(e.Salary) FROM Employees e WHERE e.BranchID = b.BranchID) AS AvgSalary, (SELECT SUM(t.Amount) FROM Transactions t WHERE t.AccountID IN (SELECT a.AccountID FROM Accounts a WHERE a.CustomerID IN (SELECT e.EmployeeID FROM Employees e WHERE e.BranchID = b.BranchID)) AND t.Status = 'Завершено') AS TotalTransactions, (SELECT COUNT(*) FROM Loans l WHERE l.CustomerID IN (SELECT c.CustomerID FROM Customers c WHERE c.CustomerID IN (SELECT a.CustomerID FROM Accounts a WHERE a.CustomerID IN (SELECT e.EmployeeID FROM Employees e WHERE e.BranchID = b.BranchID))) AND l.Status = 'Активен') AS ActiveLoans FROM Branches b WHERE b.BranchID IN (SELECT DISTINCT BranchID FROM Employees WHERE Salary > 60000) ORDER BY TotalTransactions DESC LIMIT 5;"
+        },
+        {
+            "question": "Какие 5 клиентов имеют наибольший объем транзакций в долларах и активных кредитах? Покажите имя и фамилию клиента, общий объем транзакций в долларах, количество активных кредитов и общую сумму активных кредитов.",
+            "sql_query": "SELECT c.FirstName, c.LastName, (SELECT SUM(t.Amount) FROM Transactions t WHERE t.AccountID IN (SELECT a.AccountID FROM Accounts a WHERE a.CustomerID = c.CustomerID AND a.Currency = 'USD') AND t.Status = 'Завершено') AS TotalUSDTransactions, (SELECT COUNT(*) FROM Loans l WHERE l.CustomerID = c.CustomerID AND l.Status = 'Активно') AS ActiveLoans, (SELECT SUM(l.PrincipalAmount) FROM Loans l WHERE l.CustomerID = c.CustomerID AND l.Status = 'Активно') AS TotalActiveLoanAmount FROM Customers c ORDER BY TotalUSDTransactions DESC LIMIT 5;"
+        },
+        {
+            "question": "Какие 5 филиалов банка имеют наибольшее количество активных банкоматов и объем транзакций? Покажите название отделения, количество активных банкоматов и общий объем транзакций.",
+            "sql_query": "SELECT b.BranchName, (SELECT COUNT(*) FROM ATMs atm WHERE atm.BranchID = b.BranchID AND atm.Status = 'Active') AS ActiveATMs, (SELECT SUM(t.Amount) FROM Transactions t WHERE t.AccountID IN (SELECT a.AccountID FROM Accounts a WHERE a.CustomerID IN (SELECT e.EmployeeID FROM Employees e WHERE e.BranchID = b.BranchID)) AND t.Status = 'Завершено') AS TotalTransactionVolume FROM Branches b ORDER BY ActiveATMs DESC, TotalTransactionVolume DESC LIMIT 5;"
+        },
+        {
+            "question": "Какие сотрудники (банкиры и кредитные специалисты) имеют управляемые кредиты и страховые полисы, отсортированные по средней зарплате в филиале? Покажите имя и фамилию сотрудника, должность, количество управляемых кредитов и страховых полисов, а также среднюю зарплату в филиале.",
+            "sql_query": "SELECT e.FirstName, e.LastName, e.Position, (SELECT COUNT(*) FROM Loans l WHERE l.CustomerID = e.EmployeeID AND l.Status = 'Активно') AS ManagedLoans, (SELECT COUNT(*) FROM InsurancePolicies ip WHERE ip.CustomerID = e.EmployeeID AND ip.Status = 'Активен') AS ManagedPolicies, (SELECT AVG(e2.Salary) FROM Employees e2 WHERE e2.BranchID = e.BranchID) AS BranchAverageSalary FROM Employees e WHERE e.Position IN ('Банкир', 'Кредитный специалист') HAVING ManagedLoans > 0 AND ManagedPolicies > 0 ORDER BY BranchAverageSalary DESC;"
+        },
+        {
+            "question": "Какие 10 клиентов с активными вкладами имеют наибольший объем операций по вкладам? Покажите имя и фамилию клиента, количество активных вкладов, общий объем операций по вкладам и среднюю сумму операций.",
+            "sql_query": "SELECT c.FirstName, c.LastName, (SELECT COUNT(*) FROM Deposits d WHERE d.CustomerID = c.CustomerID AND d.Status = 'Активен') AS ActiveDeposits, (SELECT SUM(dt.Amount) FROM DepositTransactions dt WHERE dt.DepositID IN (SELECT d.DepositID FROM Deposits d WHERE d.CustomerID = c.CustomerID) AND dt.Status = 'Завершено') AS TotalDepositTransactions, (SELECT AVG(dt.Amount) FROM DepositTransactions dt WHERE dt.DepositID IN (SELECT d.DepositID FROM Deposits d WHERE d.CustomerID = c.CustomerID) AND dt.Status = 'Завершено') AS AverageDepositTransaction FROM Customers c WHERE c.CustomerID IN (SELECT DISTINCT CustomerID FROM Deposits WHERE Status = 'Активен') ORDER BY TotalDepositTransactions DESC LIMIT 10;"
+        },
+        {
+            "question": "Какие 5 филиалов банка имеют наибольший доход от услуг? Покажите название отделения, количество активных услуг и общий доход от услуг.",
+            "sql_query": "SELECT b.BranchName, (SELECT COUNT(*) FROM CustomerServices cs WHERE cs.CustomerID IN (SELECT c.CustomerID FROM Customers c WHERE c.CustomerID IN (SELECT a.CustomerID FROM Accounts a WHERE a.CustomerID IN (SELECT e.EmployeeID FROM Employees e WHERE e.BranchID = b.BranchID))) AND cs.Status = 'активен') AS ActiveServices, (SELECT SUM(s.Fee) FROM Services s WHERE s.ServiceID IN (SELECT cs.ServiceID FROM CustomerServices cs WHERE cs.CustomerID IN (SELECT c.CustomerID FROM Customers c WHERE c.CustomerID IN (SELECT a.CustomerID FROM Accounts a WHERE a.CustomerID IN (SELECT e.EmployeeID FROM Employees e WHERE e.BranchID = b.BranchID)))) AND s.Status = 'Активен') AS TotalServiceRevenue FROM Branches b ORDER BY TotalServiceRevenue DESC LIMIT 5;"
+        },
+        {
+            "question": "Какие 5 кредитных специалистов имеют наибольшее количество управляемых кредитов? Покажите имя и фамилию сотрудника, должность, количество управляемых кредитов, среднюю процентную ставку по кредитам и общую сумму выплат по кредитам.",
+            "sql_query": "SELECT e.FirstName, e.LastName, e.Position, (SELECT COUNT(*) FROM Loans l WHERE l.CustomerID = e.EmployeeID AND l.Status = 'Активно') AS ManagedLoans, (SELECT AVG(l.InterestRate) FROM Loans l WHERE l.CustomerID = e.EmployeeID AND l.Status = 'Активно') AS AverageLoanInterest, (SELECT SUM(lp.Amount) FROM LoanPayments lp WHERE lp.LoanID IN (SELECT l.LoanID FROM Loans l WHERE l.CustomerID = e.EmployeeID) AND lp.Status = 'Завершено') AS TotalLoanPayments FROM Employees e WHERE e.Position = 'Кредитный специалист' ORDER BY ManagedLoans DESC LIMIT 5;"
+        },
+        {
+            "question": "Какие 10 клиентов с активными страховыми полисами имеют наибольшую сумму выплаченных возмещений? Покажите имя и фамилию клиента, количество активных страховых полисов, количество выплаченных возмещений и общую сумму выплаченных возмещений.",
+            "sql_query": "SELECT c.FirstName, c.LastName, (SELECT COUNT(*) FROM InsurancePolicies ip WHERE ip.CustomerID = c.CustomerID AND ip.Status = 'Активен') AS ActivePolicies, (SELECT COUNT(*) FROM PolicyClaims pc WHERE pc.PolicyID IN (SELECT ip.PolicyID FROM InsurancePolicies ip WHERE ip.CustomerID = c.CustomerID) AND pc.Status = 'Выплачено') AS TotalClaims, (SELECT SUM(pc.ClaimAmount) FROM PolicyClaims pc WHERE pc.PolicyID IN (SELECT ip.PolicyID FROM InsurancePolicies ip WHERE ip.CustomerID = c.CustomerID) AND pc.Status = 'Выплачено') AS TotalClaimAmount FROM Customers c WHERE c.CustomerID IN (SELECT DISTINCT CustomerID FROM InsurancePolicies WHERE Status = 'Активен') ORDER BY TotalClaimAmount DESC LIMIT 10;"
+        },
+        {
+            "question": "Какие 5 филиалов банка имеют наибольший объем транзакций? Покажите название отделения, общее количество сотрудников, среднюю зарплату сотрудников и общий объем транзакций.",
+            "sql_query": "SELECT b.BranchName, (SELECT COUNT(*) FROM Employees e WHERE e.BranchID = b.BranchID) AS TotalEmployees, (SELECT AVG(e.Salary) FROM Employees e WHERE e.BranchID = b.BranchID) AS AverageSalary, (SELECT SUM(t.Amount) FROM Transactions t WHERE t.AccountID IN (SELECT a.AccountID FROM Accounts a WHERE a.CustomerID IN (SELECT e.EmployeeID FROM Employees e WHERE e.BranchID = b.BranchID)) AND t.Status = 'Завершено') AS TotalTransactionVolume FROM Branches b ORDER BY TotalTransactionVolume DESC LIMIT 5;"
+        },
+        {
+            "question": "Какие 10 клиентов с активными кредитами имеют наибольшую сумму кредитов и выплат? Покажите имя и фамилию клиента, количество активных кредитов, общую сумму кредитов, количество завершенных выплат и общую сумму выплат.",
+            "sql_query": "SELECT c.FirstName, c.LastName, (SELECT COUNT(*) FROM Loans l WHERE l.CustomerID = c.CustomerID AND l.Status = 'Активно') AS ActiveLoans, (SELECT SUM(l.PrincipalAmount) FROM Loans l WHERE l.CustomerID = c.CustomerID AND l.Status = 'Активно') AS TotalLoanAmount, (SELECT COUNT(*) FROM LoanPayments lp WHERE lp.LoanID IN (SELECT l.LoanID FROM Loans l WHERE l.CustomerID = c.CustomerID) AND lp.Status = 'Завершено') AS CompletedPayments, (SELECT SUM(lp.Amount) FROM LoanPayments lp WHERE lp.LoanID IN (SELECT l.LoanID FROM Loans l WHERE l.CustomerID = c.CustomerID) AND lp.Status = 'Завершено') AS TotalPaidAmount FROM Customers c WHERE c.CustomerID IN (SELECT DISTINCT CustomerID FROM Loans WHERE Status = 'Активно') ORDER BY TotalLoanAmount DESC LIMIT 10;"
+        },
+        {
+            "question": "Какие 5 сотрудников (банкиры и аналитики) имеют наибольший доход от услуг? Мне нужно получить имя и фамилию сотрудника, должность, количество управляемых услуг, общий доход от услуг и среднюю зарплату в филиале.",
+            "sql_query": "SELECT e.FirstName, e.LastName, e.Position, (SELECT COUNT(*) FROM CustomerServices cs WHERE cs.CustomerID = e.EmployeeID AND cs.Status = 'активен') AS ManagedServices, (SELECT SUM(s.Fee) FROM Services s WHERE s.ServiceID IN (SELECT cs.ServiceID FROM CustomerServices cs WHERE cs.CustomerID = e.EmployeeID) AND s.Status = 'Активен') AS TotalServiceRevenue, (SELECT AVG(e2.Salary) FROM Employees e2 WHERE e2.BranchID = e.BranchID) AS BranchAverageSalary FROM Employees e WHERE e.Position IN ('Банкир', 'Аналитик') ORDER BY TotalServiceRevenue DESC LIMIT 5;"
+        },
+        {
+            "question": "Какие 10 клиентов с активными счетами в нескольких валютах имеют наибольший общий баланс? Покажите имя и фамилию клиента, количество активных валют, общий баланс по счетам и общее количество транзакций.",
+            "sql_query": "SELECT c.FirstName, c.LastName, (SELECT COUNT(DISTINCT a.Currency) FROM Accounts a WHERE a.CustomerID = c.CustomerID AND a.Status = 'Active') AS ActiveCurrencies, (SELECT SUM(a.Balance) FROM Accounts a WHERE a.CustomerID = c.CustomerID AND a.Status = 'Active') AS TotalBalance, (SELECT COUNT(*) FROM Transactions t WHERE t.AccountID IN (SELECT a.AccountID FROM Accounts a WHERE a.CustomerID = c.CustomerID) AND t.Status = 'Завершено') AS TotalTransactions FROM Customers c HAVING ActiveCurrencies > 1 ORDER BY TotalBalance DESC LIMIT 10;"
+        },
+        {
+            "question": "Какие 5 филиалов банка имеют наибольшую сумму наличных в банкоматах? Покажите название отделения, количество активных банкоматов, общую сумму наличных в банкоматах и среднюю зарплату сотрудников.",
+            "sql_query": "SELECT b.BranchName, (SELECT COUNT(*) FROM ATMs atm WHERE atm.BranchID = b.BranchID AND atm.Status = 'Active') AS ActiveATMs, (SELECT SUM(atm.CashAvailable) FROM ATMs atm WHERE atm.BranchID = b.BranchID AND atm.Status = 'Active') AS TotalCashAvailable, (SELECT AVG(e.Salary) FROM Employees e WHERE e.BranchID = b.BranchID) AS AverageEmployeeSalary FROM Branches b ORDER BY TotalCashAvailable DESC LIMIT 5;"
+        },
+        {
+            "question": "Какие 10 клиентов с активными вкладами имеют наибольший расчетный годовой процентный доход? Покажите имя и фамилию клиента, количество активных вкладов, расчетный годовой процентный доход и общий объем операций по вкладам.",
+            "sql_query": "SELECT c.FirstName, c.LastName, (SELECT COUNT(*) FROM Deposits d WHERE d.CustomerID = c.CustomerID AND d.Status = 'Активен') AS ActiveDeposits, (SELECT SUM(d.Amount * d.InterestRate / 100) FROM Deposits d WHERE d.CustomerID = c.CustomerID AND d.Status = 'Активен') AS EstimatedAnnualInterest, (SELECT SUM(dt.Amount) FROM DepositTransactions dt WHERE dt.DepositID IN (SELECT d.DepositID FROM Deposits d WHERE d.CustomerID = c.CustomerID) AND dt.Status = 'Завершено') AS TotalDepositTransactions FROM Customers c WHERE c.CustomerID IN (SELECT DISTINCT CustomerID FROM Deposits WHERE Status = 'Активен') ORDER BY EstimatedAnnualInterest DESC LIMIT 10;"
+        },
+        {
+            "question": "Какие 5 банкиров имеют наибольшую сумму страхового покрытия по управляемым полисам? Покажите имя и фамилию сотрудника, должность, количество управляемых страховых полисов, общую сумму страхового покрытия и среднюю зарплату в филиале.",
+            "sql_query": "SELECT e.FirstName, e.LastName, e.Position, (SELECT COUNT(*) FROM InsurancePolicies ip WHERE ip.CustomerID = e.EmployeeID AND ip.Status = 'Активен') AS ManagedPolicies, (SELECT SUM(ip.CoverageAmount) FROM InsurancePolicies ip WHERE ip.CustomerID = e.EmployeeID AND ip.Status = 'Активен') AS TotalCoverage, (SELECT AVG(e2.Salary) FROM Employees e2 WHERE e2.BranchID = e.BranchID) AS BranchAverageSalary FROM Employees e WHERE e.Position = 'Банкир' ORDER BY TotalCoverage DESC LIMIT 5;"
+        },
+        {
+            "question": "Какие 10 клиентов с активными кредитами имеют наибольшие расходы по кредитным картам? Покажите имя и фамилию клиента, количество активных кредитов, количество активных кредитных карт, общую сумму расходов по кредитным картам и общую сумму кредитов.",
+            "sql_query": "SELECT c.FirstName, c.LastName, (SELECT COUNT(*) FROM Loans l WHERE l.CustomerID = c.CustomerID AND l.Status = 'Активно') AS ActiveLoans, (SELECT COUNT(*) FROM CreditCards cc WHERE cc.CustomerID = c.CustomerID AND cc.Status = 'Активна') AS ActiveCreditCards, (SELECT SUM(ct.Amount) FROM CardTransactions ct WHERE ct.CardID IN (SELECT cc.CardID FROM CreditCards cc WHERE cc.CustomerID = c.CustomerID) AND ct.Status = 'Завершена') AS TotalCardSpending, (SELECT SUM(l.PrincipalAmount) FROM Loans l WHERE l.CustomerID = c.CustomerID AND l.Status = 'Активно') AS TotalLoanAmount FROM Customers c WHERE c.CustomerID IN (SELECT DISTINCT CustomerID FROM Loans WHERE Status = 'Активно') ORDER BY TotalCardSpending DESC LIMIT 10;"
+        }
+    ]
+}

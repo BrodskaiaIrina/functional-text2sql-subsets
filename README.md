@@ -1,6 +1,5 @@
 # RedSQL: Russian Domain-Specific Text-to-SQL Benchmark
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/release/python-380/)
 
 ## 📖 Overview
@@ -243,7 +242,7 @@ We evaluated 5 state-of-the-art language models on RedSQL:
 - **DeepSeek V3**
 - **Meta LLaMA 3.3 70B**
 - **OpenAI GPT-4o**
-- **GigaChat Max** (Russian-focused model)
+- **GigaChat Max**
 
 ### Key Findings
 
@@ -252,31 +251,6 @@ We evaluated 5 state-of-the-art language models on RedSQL:
 3. **Model Robustness**: GPT-4o shows the most stable performance across domains
 4. **Terminology Challenges**: Domain-specific terms significantly impact model performance
 
-## 📝 Citation
-
-If you use RedSQL in your research, please cite our paper:
-
-```bibtex
-@article{redsql2024,
-  title={Bridging the Gap with RedSQL: A Russian Text-to-SQL Benchmark for Domain-Specific Applications},
-  author={[Authors]},
-  journal={[Conference/Journal]},
-  year={2024}
-}
-```
-
-## 🤝 Contributing
-
-We welcome contributions to improve RedSQL! Please feel free to:
-
-- Report bugs or issues
-- Suggest new domains or query types
-- Improve database schemas
-- Add more query examples
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🔗 Related Work
 
@@ -284,13 +258,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **WikiSQL**: Large-scale text-to-SQL dataset
 - **BIRD**: Big bench for large-scale database grounded text-to-SQL evaluation
 - **PAUQ**: Previous Russian text-to-SQL benchmark (general domain)
-
-## 📧 Contact
-
-For questions or collaborations, please contact:
-- [Your Email]
-- [Institution/Affiliation]
-
 ---
 
 **Note**: This benchmark is designed for research purposes to advance the field of domain-specific text-to-SQL generation. All data is synthetically generated and does not contain real personal or sensitive information. 
